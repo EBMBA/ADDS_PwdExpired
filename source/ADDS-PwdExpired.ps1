@@ -69,52 +69,28 @@ function Validate-IsEmptyTrim ([string] $field) {
 #########################################################################
 #                       DATA       						       		                #
 #########################################################################
-<#
-$UsersLocks = $(Search-ADAccount -LockedOut | Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
-Write-Host $UsersLocks
-
-$WPF_Refresh.Add_Click({
-  $WPF_Users.Items.Clear()
-  $UsersLocksTemp = $(Search-ADAccount -LockedOut | Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
-  foreach ($UserLock in $UsersLocksTemp) {
-    $GroupsList = New-Object PSObject
-    $GroupsList = $GroupsList | Add-Member NoteProperty Login $UserLock.SamAccountName -passthru
-    $GroupsList = $GroupsList | Add-Member NoteProperty Name $UserLock.Name -passthru	
-    $GroupsList = $GroupsList | Add-Member NoteProperty PwdExpire $UserLock.PasswordExpired -passthru
-    $GroupsList = $GroupsList | Add-Member NoteProperty Last_Modified $UserLock.PasswordLastSet -passthru	
-    $WPF_Users.Items.Add($GroupsList) > $null
-  }
-})
 
 $Form.Add_ContentRendered({
   $WPF_Validate.IsEnabled = $false
 })
 
-foreach ($UserLock in $UsersLocks) {
-  $GroupsList = New-Object PSObject
-  $GroupsList = $GroupsList | Add-Member NoteProperty Login $UserLock.SamAccountName -passthru
-  $GroupsList = $GroupsList | Add-Member NoteProperty Name $UserLock.Name -passthru	
-  $GroupsList = $GroupsList | Add-Member NoteProperty PwdExpire $UserLock.PasswordExpired -passthru
-  $GroupsList = $GroupsList | Add-Member NoteProperty Last_Modified $UserLock.PasswordLastSet -passthru	
-  $WPF_Users.Items.Add($GroupsList) > $null
-}
-
-$WPF_Username.Add_TextChanged({
-  try {
-    Get-ADUser -Identity $($WPF_Username.Text)
-    $WPF_Username.Background = [System.Windows.Media.Brushes]::PaleGreen
-    $WPF_Validate.IsEnabled = $True
+$WPF_Refresh.Add_Click({
+  $WPF_Users.Items.Clear()
+  $Users = $(Get-ADUser -Filter {Name -like "*$($WPF_Username.Text)*" } | Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
+  foreach ($User in $Users) {
+    $GroupsList = New-Object PSObject
+    $GroupsList = $GroupsList | Add-Member NoteProperty Login $User.SamAccountName -passthru
+    $GroupsList = $GroupsList | Add-Member NoteProperty Name $User.Name -passthru	
+    $GroupsList = $GroupsList | Add-Member NoteProperty PwdExpire $User.PasswordExpired -passthru
+    $GroupsList = $GroupsList | Add-Member NoteProperty Last_Modified $User.PasswordLastSet -passthru	
+    $WPF_Users.Items.Add($GroupsList) > $null
   }
-  catch {
-    $WPF_Username.Background = [System.Windows.Media.Brushes]::PaleVioletRed
-    $WPF_Validate = $false
-  }
+  $WPF_Validate.IsEnabled = $True
 })
 
 $WPF_Users.add_SelectionChanged({
   $WPF_Username.Text=$($WPF_Users.SelectedItem).Login
 })
-
 
 $WPF_Validate.Add_Click({
   if (-not(Validate-IsEmptyTrim($WPF_Username.Text))) {
@@ -150,19 +126,6 @@ $WPF_Validate.Add_Click({
     }
     
   }
-})
-#>
-$WPF_Username.Add_TextChanged({
-    $Users = $(Get-ADUser -Filter {Name -like "*$($WPF_Username.Text)*" } | Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
-    foreach ($User in $Users) {
-      $GroupsList = New-Object PSObject
-      $GroupsList = $GroupsList | Add-Member NoteProperty Login $User.SamAccountName -passthru
-      $GroupsList = $GroupsList | Add-Member NoteProperty Name $User.Name -passthru	
-      $GroupsList = $GroupsList | Add-Member NoteProperty PwdExpire $User.PasswordExpired -passthru
-      $GroupsList = $GroupsList | Add-Member NoteProperty Last_Modified $User.PasswordLastSet -passthru	
-      $WPF_Users.Items.Add($GroupsList) > $null
-    }
-    $WPF_Validate.IsEnabled = $True
 })
 
 $Form.ShowDialog() | Out-Null
