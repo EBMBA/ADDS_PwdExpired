@@ -152,7 +152,6 @@ $WPF_Validate.Add_Click({
   }
 })
 #>
-
 $WPF_Username.Add_TextChanged({
     $Users = $(Get-ADUser -Filter {Name -like "*$($WPF_Username.Text)*" } | Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
     foreach ($User in $Users) {
