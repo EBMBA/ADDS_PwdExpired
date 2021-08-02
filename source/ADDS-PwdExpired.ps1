@@ -71,6 +71,15 @@ function Validate-IsEmptyTrim ([string] $field) {
 #########################################################################
 
 $Form.Add_ContentRendered({
+  $Users = $(Search-ADAcount -PasswordExpired| Select-Object -Property Name, SamAccountName, PasswordExpired, PasswordLastSet)
+  foreach ($User in $Users) {
+    $GroupsList = New-Object PSObject
+    $GroupsList = $GroupsList | Add-Member NoteProperty Login $User.SamAccountName -passthru
+    $GroupsList = $GroupsList | Add-Member NoteProperty Name $User.Name -passthru	
+    $GroupsList = $GroupsList | Add-Member NoteProperty PwdExpire $User.PasswordExpired -passthru
+    $GroupsList = $GroupsList | Add-Member NoteProperty Last_Modified $User.PasswordLastSet -passthru	
+    $WPF_Users.Items.Add($GroupsList) > $null
+  }
   $WPF_Validate.IsEnabled = $false
 })
 
